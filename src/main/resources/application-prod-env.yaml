@@ -1,0 +1,4 @@
+basic-service:
+  telegram-bot-api:
+    url: https://api.telegram.org/bot%s
+    token: ${TELEGRAM_BOT_API_TOKEN}
