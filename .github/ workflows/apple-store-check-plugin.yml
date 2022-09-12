@@ -1,0 +1,27 @@
+name: apple-store-check-plugin
+
+on:
+  push:
+    branches: [ "master" ]
+  pull_request:
+    branches: [ "master" ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      # checkout
+      - name: checkout
+        uses: actions/checkout@v2.4.2
+      # setup java
+      - name: setup-java
+        uses: actions/setup-java@v3.5.0
+        with:
+          java-version: '11'
+          distribution: 'temurin'
+      # package
+      - name: package
+        run: mvn package -Dmaven.test.skip=true
+      # run
+      - name: run
+        run: java -jar ./target/demo-project-spring-boot-0.0.1-SNAPSHOT.jar --plugin.active-plugin-name=apple-store-check-plugin
