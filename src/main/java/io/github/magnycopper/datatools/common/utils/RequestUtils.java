@@ -64,7 +64,7 @@ public class RequestUtils {
             }
         });
         stopWatch.stop();
-        log.info("请求GET接口:{},耗时:{}s", httpUrl.uri(), stopWatch.getTime(TimeUnit.SECONDS));
+        log.debug("请求GET接口:{},耗时:{}s", httpUrl.uri(), stopWatch.getTime(TimeUnit.SECONDS));
         return result;
     }
 
@@ -96,7 +96,7 @@ public class RequestUtils {
             }
         });
         stopWatch.stop();
-        log.info("请求POST接口:{},耗时:{}s", httpUrl.uri(), stopWatch.getTime(TimeUnit.SECONDS));
+        log.debug("请求POST接口:{},耗时:{}s", httpUrl.uri(), stopWatch.getTime(TimeUnit.SECONDS));
         return result;
     }
 }
