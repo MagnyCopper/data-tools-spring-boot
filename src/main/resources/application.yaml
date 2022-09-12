@@ -1,0 +1,8 @@
+spring:
+  profiles:
+    group:
+      dev: dev-env,plugins
+      prod: prod-env,plugins
+    active: prod
+  application:
+    name: data-tools-spring-boot

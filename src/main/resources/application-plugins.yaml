@@ -1,0 +1,4 @@
+plugin:
+  configs:
+    # 测试插件
+    - name: test-data-plugin
