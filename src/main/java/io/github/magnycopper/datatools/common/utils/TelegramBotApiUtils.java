@@ -30,7 +30,7 @@ public class TelegramBotApiUtils {
      * @return TelegramBot接口地址
      */
     private String getBotApiUrl() {
-        return String.format(apiUrl + "/sendMessage", token);
+        return String.format(apiUrl, token);
     }
 
     /**
@@ -44,7 +44,6 @@ public class TelegramBotApiUtils {
         Map<String, String> parms = new HashMap<>();
         parms.put("chat_id", chatId);
         parms.put("text", message);
-        String s = RequestUtils.get(getBotApiUrl(), parms);
-        log.info(s);
+        RequestUtils.get(getBotApiUrl() + "/sendMessage", parms);
     }
 }
