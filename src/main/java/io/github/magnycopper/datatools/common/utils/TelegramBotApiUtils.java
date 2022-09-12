@@ -44,6 +44,7 @@ public class TelegramBotApiUtils {
         Map<String, String> parms = new HashMap<>();
         parms.put("chat_id", chatId);
         parms.put("text", message);
-        RequestUtils.get(getBotApiUrl(), parms);
+        String s = RequestUtils.get(getBotApiUrl(), parms);
+        log.info(s);
     }
 }
