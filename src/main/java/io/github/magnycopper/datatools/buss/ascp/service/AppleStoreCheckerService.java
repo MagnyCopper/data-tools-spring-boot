@@ -90,7 +90,7 @@ public class AppleStoreCheckerService {
                 .map(entry -> String.format("%s:%s", entry.getKey(), entry.getValue()))
                 .collect(Collectors.joining("\n"));
         String result = String.format("[%s]的存货情况\n邮寄预计时间:\n%s\n线下自提时间:\n%s", appleProductEnums.getProductName(), deliveryDate, pickupString);
-        log.info(result);
+        log.info("\n" + result);
         telegramBotApiUtils.sendMessage("1383302470", result);
     }
 }

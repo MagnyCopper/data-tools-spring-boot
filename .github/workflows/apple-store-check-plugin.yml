@@ -19,9 +19,12 @@ jobs:
         with:
           java-version: '11'
           distribution: 'temurin'
-      # package
+          cache: maven
+      # package&run
       - name: package
         run: mvn package -Dmaven.test.skip=true
       # run
       - name: run
-        run: java -jar ./target/demo-project-spring-boot-0.0.1-SNAPSHOT.jar --plugin.active-plugin-name=apple-store-check-plugin
+        env:
+          TELEGRAM_BOT_API_TOKEN: ${{ secrets.TELEGRAM_BOT_API_TOKEN }}
+        run: java -jar ./target/data-tools-spring-boot-0.0.1-SNAPSHOT.jar --plugin.active-plugin-name=apple-store-check-plugin
