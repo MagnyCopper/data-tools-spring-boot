@@ -5,15 +5,15 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.json.JsonMapper;
 import io.github.magnycopper.datatools.buss.ascp.common.AppleProductEnums;
 import io.github.magnycopper.datatools.buss.ascp.common.AppleStoreEnums;
+import io.github.magnycopper.datatools.buss.ascp.entity.InStockStateEntity;
 import io.github.magnycopper.datatools.common.utils.RequestUtils;
 import io.github.magnycopper.datatools.common.utils.TelegramBotApiUtils;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.stream.Collectors;
+import java.util.*;
 
 @Slf4j
 @Service
@@ -44,13 +44,13 @@ public class AppleStoreCheckerService {
      * @return 查询结果
      * @throws IOException 接口调用异常
      */
-    private JsonNode request(AppleStoreEnums appleStoreEnums, AppleProductEnums... appleProductEnums) throws IOException {
+    private JsonNode requestFulfillmentMessagesAPI(AppleStoreEnums appleStoreEnums, AppleProductEnums... appleProductEnums) throws IOException {
         Map<String, String> requestParms = new HashMap<>();
         if (appleStoreEnums != null) {
-            requestParms.put("store", appleStoreEnums.name());
+            requestParms.put("store", appleStoreEnums.getId());
         }
         for (int i = 0; i < appleProductEnums.length; i++) {
-            requestParms.put("parts." + i, appleProductEnums[i].getProductCode());
+            requestParms.put("parts." + i, appleProductEnums[i].getCode());
         }
         String resultJsonString = RequestUtils.get(APPLE_STORE_CHECK_URL, requestParms);
         JsonNode resultNode = DEFAULT_OBJECT_MAPPER.readTree(resultJsonString);
@@ -68,29 +68,53 @@ public class AppleStoreCheckerService {
      * @param appleProductEnums 产品代码
      * @throws IOException 查询时发生异常
      */
-    public void checkAppleStore(AppleStoreEnums appleStoreEnums, AppleProductEnums appleProductEnums) throws IOException {
-        JsonNode rootNode = request(appleStoreEnums, appleProductEnums);
-        // 邮寄预计时间
-        JsonNode deliveryMessageName = rootNode.at("/deliveryMessage");
+    public List<InStockStateEntity> checkFulfillmentMessages(AppleStoreEnums appleStoreEnums, AppleProductEnums... appleProductEnums) throws IOException {
+        JsonNode rootNode = requestFulfillmentMessagesAPI(appleStoreEnums, appleProductEnums);
+        // 按产品区分存货状态
+        Map<String, InStockStateEntity> inStockStateMap = new HashMap<>();
+        // 自提信息节点
+        JsonNode pickupMessageNode = rootNode.at("/pickupMessage");
+        // 邮寄信息节点
+        JsonNode deliveryMessageNode = rootNode.at("/deliveryMessage");
         // 依次检查各个产品
-        JsonNode deliveryProductNode = deliveryMessageName.get(appleProductEnums.getProductCode());
-        String deliveryDate = deliveryProductNode.at("/regular/deliveryOptions/0/date").asText();
-        // 线下自提检查
-        Map<String, String> pickupStoreState = new HashMap<>();
-        for (JsonNode storesNode : rootNode.at("/pickupMessage/stores")) {
-            String storeName = storesNode.at("/storeName").asText();
-            JsonNode partsAvailabilityNode = storesNode.at("/partsAvailability");
-            // 依次检查各个产品
-            JsonNode pickupProductNode = partsAvailabilityNode.get(appleProductEnums.getProductCode());
-            String pickupSearchQuote = pickupProductNode.at("/pickupSearchQuote").asText();
-            pickupStoreState.put(storeName, pickupSearchQuote);
+        List<InStockStateEntity> inStockStateEntities = new ArrayList<>();
+        for (AppleProductEnums product : appleProductEnums) {
+            InStockStateEntity inStockStateEntity = new InStockStateEntity();
+            inStockStateEntity.setAppleStoreEnums(appleStoreEnums);
+            inStockStateEntity.setAppleProductEnums(product);
+            // 处理自提时间
+            pickupMessageNode.at("/stores").forEach(stores -> {
+                String storeNumber = stores.at("/storeNumber").asText();
+                if (appleStoreEnums.getId().equals(storeNumber)) {
+                    JsonNode partsAvailabilityNode = stores.at("/partsAvailability");
+                    String pickupSearchQuote = partsAvailabilityNode.get(product.getCode()).at("/pickupSearchQuote").asText();
+                    inStockStateEntity.setPickupDate(pickupSearchQuote);
+                }
+            });
+            // 处理邮寄时间
+            Map<String, Set<String>> deliveryDateMap = new HashMap<>();
+            deliveryMessageNode.get(product.getCode()).at("/regular/deliveryOptions").forEach(deliveryOptions -> {
+                String shippingCost = deliveryOptions.at("/shippingCost").asText();
+                String date = deliveryOptions.at("/date").asText();
+                Set<String> dataSet = new HashSet<>();
+                dataSet.add(date);
+                deliveryDateMap.merge(shippingCost, dataSet, (oldValue, newValue) -> {
+                    oldValue.addAll(dataSet);
+                    return oldValue;
+                });
+            });
+            if (deliveryDateMap.size() > 0) {
+                if (deliveryDateMap.containsKey("免费")) {
+                    inStockStateEntity.setDeliveryDate(String.join("/", deliveryDateMap.get("免费")));
+                }
+                if (deliveryDateMap.containsKey("RMB 45")) {
+                    inStockStateEntity.setFastDeliveryDate(String.join("/", deliveryDateMap.get("RMB 45")));
+                }
+            }
+            if (!StringUtils.isAllBlank(inStockStateEntity.getPickupDate(), inStockStateEntity.getDeliveryDate(), inStockStateEntity.getFastDeliveryDate())) {
+                inStockStateEntities.add(inStockStateEntity);
+            }
         }
-        // 汇总输出结果
-        String pickupString = pickupStoreState.entrySet().stream()
-                .map(entry -> String.format("%s:%s", entry.getKey(), entry.getValue()))
-                .collect(Collectors.joining("\n"));
-        String result = String.format("[%s]的存货情况\n邮寄预计时间:\n%s\n线下自提时间:\n%s", appleProductEnums.getProductName(), deliveryDate, pickupString);
-        log.info("\n" + result);
-        telegramBotApiUtils.sendMessage("1383302470", result);
+        return inStockStateEntities;
     }
 }
