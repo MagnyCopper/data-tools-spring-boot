@@ -85,6 +85,7 @@ public class AppleStoreCheckPlugin extends BasicDataToolsPlugin {
                                 .collect(Collectors.joining(","))));
                     });
                 }
+                log.info("\n{}", stringBuilder);
                 telegramBotApiUtils.sendMessage("1383302470", stringBuilder.toString());
             } catch (Exception e) {
                 log.error("处理产品发货时间发生异常", e);
