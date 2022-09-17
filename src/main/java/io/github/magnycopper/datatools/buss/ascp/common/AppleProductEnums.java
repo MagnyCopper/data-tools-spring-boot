@@ -9,11 +9,11 @@ public enum AppleProductEnums {
     MQ873CH_A("iPhone 14 Pro Max 256GB 深空黑色", "MQ873CH/A"),
     MGN63CH_A("MacBook Air (M1 芯片机型) - 深空灰色", "MGN63CH/A");
 
-    private final String productName;
-    private final String productCode;
+    private final String name;
+    private final String code;
 
-    AppleProductEnums(String productName, String productCode) {
-        this.productName = productName;
-        this.productCode = productCode;
+    AppleProductEnums(String name, String code) {
+        this.name = name;
+        this.code = code;
     }
 }
