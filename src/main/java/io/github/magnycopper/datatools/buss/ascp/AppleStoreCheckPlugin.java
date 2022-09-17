@@ -12,6 +12,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -32,12 +33,17 @@ public class AppleStoreCheckPlugin extends BasicDataToolsPlugin {
     @Override
     public void run() throws Exception {
         // Apple Store库存检查
-        AppleProductEnums[] appleProductEnums = new AppleProductEnums[]{AppleProductEnums.MQ1C3CH_A, AppleProductEnums.MQ873CH_A};
-        String[] citys = new String[]{"南京", "沈阳"};
+        Map<String, String> configMaps = getConfigMaps();
+        String[] appleProductCodes = configMaps.getOrDefault("products", "").split(",");
+        List<AppleProductEnums> appleProductEnums = Arrays.stream(appleProductCodes)
+                .map(productCode -> AppleProductEnums.valueOf(productCode.replace("/", "_")))
+                .collect(Collectors.toList());
+        String[] cities = configMaps.getOrDefault("cities", "").split(",");
+        String telegramChatId = configMaps.get("telegram-chat-id");
         List<InStockStateEntity> results = new ArrayList<>();
         for (AppleStoreEnums appleStoreEnums : AppleStoreEnums.values()) {
-            if (StringUtils.equalsAny(appleStoreEnums.getCity(), citys)) {
-                List<InStockStateEntity> inStockStateEntities = appleStoreCheckerService.checkFulfillmentMessages(appleStoreEnums, appleProductEnums);
+            if (StringUtils.equalsAny(appleStoreEnums.getCity(), cities)) {
+                List<InStockStateEntity> inStockStateEntities = appleStoreCheckerService.checkFulfillmentMessages(appleStoreEnums, appleProductEnums.toArray(new AppleProductEnums[]{}));
                 results.addAll(inStockStateEntities);
             }
         }
@@ -86,7 +92,7 @@ public class AppleStoreCheckPlugin extends BasicDataToolsPlugin {
                     });
                 }
                 log.info("\n{}", stringBuilder);
-                telegramBotApiUtils.sendMessage("1383302470", stringBuilder.toString());
+                telegramBotApiUtils.sendMessage(telegramChatId, stringBuilder.toString());
             } catch (Exception e) {
                 log.error("处理产品发货时间发生异常", e);
             }

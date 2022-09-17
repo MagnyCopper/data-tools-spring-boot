@@ -3,3 +3,7 @@ plugin:
     # 测试插件
     - name: test-data-plugin
     - name: apple-store-check-plugin
+      configMaps:
+        telegram-chat-id: "1383302470"
+        cities: "南京,沈阳"
+        products: "MQ1C3CH/A,MQ873CH/A"
