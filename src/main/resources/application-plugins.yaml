@@ -3,3 +3,7 @@ plugin:
     # 测试插件
     - name: test-data-plugin
     - name: apple-store-check-plugin
+      configMaps:
+        telegram-chat-id: "1383302470"
+        cities: ${ASCP_ENV_CITIES}
+        products: ${ASCP_ENV_PRODUCTS}
