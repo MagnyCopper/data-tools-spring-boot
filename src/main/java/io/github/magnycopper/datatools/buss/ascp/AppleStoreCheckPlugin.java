@@ -61,11 +61,9 @@ public class AppleStoreCheckPlugin extends BasicDataToolsPlugin {
                         .collect(Collectors.groupingBy(InStockStateEntity::getPickupDate));
                 if (pickupDateGroup.size() > 0) {
                     stringBuilder.append("自提:\n");
-                    pickupDateGroup.forEach((date, stores) -> {
-                        stringBuilder.append(String.format("%s=>%s\n", date, stores.stream()
-                                .map(store -> String.format("%s[%s]", store.getAppleStoreEnums().getName(), store.getAppleStoreEnums().getCity()))
-                                .collect(Collectors.joining(","))));
-                    });
+                    pickupDateGroup.forEach((date, stores) -> stringBuilder.append(String.format("%s=>%s\n", date, stores.stream()
+                            .map(store -> String.format("%s[%s]", store.getAppleStoreEnums().getName(), store.getAppleStoreEnums().getCity()))
+                            .collect(Collectors.joining(",")))));
                 }
                 // 处理邮寄时间
                 Map<String, List<InStockStateEntity>> deliveryDateGroup = v.stream()
@@ -73,11 +71,9 @@ public class AppleStoreCheckPlugin extends BasicDataToolsPlugin {
                         .collect(Collectors.groupingBy(InStockStateEntity::getDeliveryDate));
                 if (deliveryDateGroup.size() > 0) {
                     stringBuilder.append("邮寄:\n");
-                    deliveryDateGroup.forEach((date, stores) -> {
-                        stringBuilder.append(String.format("%s=>%s\n", date, stores.stream()
-                                .map(store -> String.format("%s[%s]", store.getAppleStoreEnums().getName(), store.getAppleStoreEnums().getCity()))
-                                .collect(Collectors.joining(","))));
-                    });
+                    deliveryDateGroup.forEach((date, stores) -> stringBuilder.append(String.format("%s=>%s\n", date, stores.stream()
+                            .map(store -> String.format("%s[%s]", store.getAppleStoreEnums().getName(), store.getAppleStoreEnums().getCity()))
+                            .collect(Collectors.joining(",")))));
                 }
                 // 同城邮寄时间
                 Map<String, List<InStockStateEntity>> fastDeliveryDateGroup = v.stream()
@@ -85,11 +81,9 @@ public class AppleStoreCheckPlugin extends BasicDataToolsPlugin {
                         .collect(Collectors.groupingBy(InStockStateEntity::getFastDeliveryDate));
                 if (fastDeliveryDateGroup.size() > 0) {
                     stringBuilder.append("同城快递:\n");
-                    fastDeliveryDateGroup.forEach((date, stores) -> {
-                        stringBuilder.append(String.format("%s=>%s\n", date, stores.stream()
-                                .map(store -> String.format("%s[%s]", store.getAppleStoreEnums().getName(), store.getAppleStoreEnums().getCity()))
-                                .collect(Collectors.joining(","))));
-                    });
+                    fastDeliveryDateGroup.forEach((date, stores) -> stringBuilder.append(String.format("%s=>%s\n", date, stores.stream()
+                            .map(store -> String.format("%s[%s]", store.getAppleStoreEnums().getName(), store.getAppleStoreEnums().getCity()))
+                            .collect(Collectors.joining(",")))));
                 }
                 log.info("\n{}", stringBuilder);
                 telegramBotApiUtils.sendMessage(telegramChatId, stringBuilder.toString());
